@@ -17,7 +17,7 @@ public class Visualizer : MonoBehaviour
         elements = new GameObject[numberOfObjects];
         for(int i = 0; i < numberOfObjects; i++)
         {
-            var pos = (i - numberOfObjects / 2) * effectScale;
+                var pos = (i * effectScale) - (3.5f * effectScale);
             GameObject newObject = Instantiate(prefab, this.transform);
             
             newObject.transform.localPosition = new Vector3(pos, 0, 0);

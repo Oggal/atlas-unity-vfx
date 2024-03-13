@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using UnityEngine;
-
+using UnityEngine.Events;
 
 [RequireComponent(typeof(AudioSource))]
 public class AudioDrivenEvents : MonoBehaviour
@@ -15,6 +16,14 @@ public class AudioDrivenEvents : MonoBehaviour
     float[] freqBandHighest = new float[8];
     public float[] audioBand = new float[8];
     public float[] audioBandBuffer = new float[8];
+    
+    public float pulseThreshold = 0.5f;
+    public bool[] audioBandPulsed = new bool[8];
+
+    bool[] audioBandHasPulsed = new bool[8]; 
+    public UnityEvent<float>[] audioBandPulseStart = new UnityEvent<float>[8];
+    public UnityEvent<float>[] audioBandPulseEnd = new UnityEvent<float>[8];
+
 
     
     // Start is called before the first frame update
@@ -23,6 +32,7 @@ public class AudioDrivenEvents : MonoBehaviour
         if(audioSource == null)
         {
             audioSource = GetComponent<AudioSource>();
+            InitializeAudioBandPulse();
         }
     }
 
@@ -37,6 +47,11 @@ public class AudioDrivenEvents : MonoBehaviour
             GetAudioBands();
         }
     }
+    
+    void LateUpdate()
+    {
+        CheckAudioBandPulse();
+    }
 
     void GetAudioBands()
     {
@@ -48,8 +63,39 @@ public class AudioDrivenEvents : MonoBehaviour
             }
             audioBand[i] = (freqBand[i] / freqBandHighest[i]);
             audioBandBuffer[i] = (bandBuffer[i] / freqBandHighest[i]);
+            audioBandPulsed[i] |= audioBand[i] > pulseThreshold;
         }
     }
+
+    void InitializeAudioBandPulse()
+    {
+        for(int i = 0; i < 8; i++)
+        {
+            audioBandPulseStart[i] = new UnityEvent<float>();
+            audioBandPulseEnd[i] = new UnityEvent<float>();
+            audioBandPulsed[i] = false;
+            audioBandHasPulsed[i] = false;
+        }
+    }
+
+    void CheckAudioBandPulse()
+    {
+        for(int i = 0; i < 8; i++)
+        {
+            if(audioBandPulsed[i])
+            {
+                audioBandPulseStart[i].Invoke(audioBand[i]);
+            } 
+            else if( audioBandHasPulsed[i] )
+            { 
+                audioBandPulseEnd[i].Invoke(audioBand[i]);
+            }
+            audioBandHasPulsed[i] = audioBandPulsed[i];
+            audioBandPulsed[i] = false;
+
+        }
+    }
+
     public float GetAudioBand(int index)
     {
         return audioBand[index];
@@ -98,6 +144,7 @@ public class AudioDrivenEvents : MonoBehaviour
     {
         for(int g = 0; g < 8; g++)
         {
+            
             if(freqBand[g] > bandBuffer[g])
             {
                 bandBuffer[g] = freqBand[g];

@@ -82,7 +82,7 @@ public class AudioDrivenEvents : MonoBehaviour
     {
         for(int i = 0; i < 8; i++)
         {
-            if(audioBandPulsed[i])
+            if(audioBandPulsed[i] && !audioBandHasPulsed[i])
             {
                 audioBandPulseStart[i].Invoke(audioBand[i]);
             } 
@@ -92,7 +92,6 @@ public class AudioDrivenEvents : MonoBehaviour
             }
             audioBandHasPulsed[i] = audioBandPulsed[i];
             audioBandPulsed[i] = false;
-
         }
     }
 
